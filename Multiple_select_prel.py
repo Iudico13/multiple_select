@@ -3,6 +3,16 @@ import numpy as np
 import tensorflow as tf
 from keras.models import load_model
 import os
+from skimage import img_as_ubyte
+from skimage.segmentation import clear_border
+from skimage.color import label2rgb
+from skimage.measure import label, regionprops
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import normalize
+from tkinter import Tk, filedialog
+from skimage.io import imread
+import shutil
+from PIL import Image as pil_Image
 
 
 # Main loop for execution of multiple-select method
@@ -50,11 +60,7 @@ while loop:
     else:
         print("Invalid input!")
 
-import cv2
-import numpy as np
-import os
-from tkinter import Tk, filedialog
-import matplotlib.pyplot as plt
+
 
 def define_data():
     print("> Browse to the desired location and select 1 representative projection image")
@@ -129,20 +135,14 @@ def define_data():
     return imageData, ImageROI
 
 
-import cv2
-import numpy as np
-from skimage import img_as_ubyte
-from skimage.segmentation import clear_border
-from skimage.measure import label, regionprops
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import normalize
+
 
 def single_run(Image, net, testRun, angularPos, imageNumber, imageData):
 
     #Loading model from hdf5 file
-    model = load_model('your_model.hdf5')  
+    model = load_model('droplet_model.hdf5')  
 
-    # Preprocess image here as required for your model's input
+    # Preprocess image here as required for model's input
     preprocessed_image = np.expand_dims(normalize(np.array(Image), axis=1),3)
 
     # Predict using the loaded model
@@ -188,8 +188,7 @@ def single_run(Image, net, testRun, angularPos, imageNumber, imageData):
 
     return projectionData
 
-import numpy as np
-from skimage.measure import regionprops
+
 
 def get_projection_data(Drop_Seg, Needle_Seg, projNumber, imageNumber):
     # Find properties of droplet
@@ -236,9 +235,7 @@ def get_projection_data(Drop_Seg, Needle_Seg, projNumber, imageNumber):
 
     return projectionData
 
-import numpy as np
-import os
-from skimage.io import imread
+
 
 
 def complete_run(imageData, net):
@@ -250,15 +247,15 @@ def complete_run(imageData, net):
 
     projection_Data_cell_1 = [None] * imageData['projPerAng']
     projection_Data_cell = [None] * imageData['angPos']
-
+    #for each angular position
     for angularPos in range(imageData['angPos']):
         print(f'Progressing: {angularPos:04d}/{imageData["angPos"]-1:04d}')
-
+        # for each image in the angular position
         for imageNumber in range(imageData['projPerAng']):
             name = f"{splitString[0]}{del_}{angularPos:08d}{del_}{imageNumber:04d}.png"
             Image = imread(os.path.join(imageData['path'], name))
             ImageROI = Image[int(imageData['rect'][1]):int(imageData['rect'][1] + imageData['rect'][3]), int(imageData['rect'][0]):int(imageData['rect'][0] + imageData['rect'][2])]
-
+            #run single_run and temp save projection data
             projectionData_tmp = single_run(ImageROI, net, testRun, angularPos, imageNumber)
             projection_Data_cell_1[imageNumber] = projectionData_tmp
 
@@ -306,9 +303,7 @@ def evaluate_droplet_length(projection_Data_cell, imageData):
 
     return mediumDropLengths, accordingProjection
 
-import os
-import shutil
-from PIL import Image as pil_Image
+
 
 def generate_projection_folder(according_projection, state, medium_drop_lengths, image_data):
     output_directory = os.path.join(image_data['path'], f'lengthEval_{round(medium_drop_lengths[state]):.4d}')
@@ -330,8 +325,7 @@ def generate_projection_folder(according_projection, state, medium_drop_lengths,
 
     return
 
-import matplotlib.pyplot as plt
-from skimage.color import label2rgb
+
 
 def plot_test(test_img, category_img, category_img_water, category_img_water_desp, category_img_water_morph, data):
     fig, axes = plt.subplots(2, 2, figsize=(10, 10))
